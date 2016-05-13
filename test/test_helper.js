@@ -1,35 +1,47 @@
-import _$ from 'jquery';
 import React from 'react';
-import ReactDOM from 'react-dom';
-import TestUtils from 'react-addons-test-utils';
 import jsdom from 'jsdom';
+import _$ from 'jquery';
+import TestUtils from 'react-addons-test-utils';
+import ReactDOM from 'react-dom';
 import chai, { expect } from 'chai';
-import chaiJquery from 'chai-jquery';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
-import reducers from '../src/reducers';
+import chaiJquery from 'chai-jquery';
+import reducer from '../src/reducers';
 
-global.document = jsdom.jsdom('<!doctype html><html><body></body></html>');
+// Set up environment to run like a browser in cli
+
+// Create mock document and window bound to node global object
+global.document = jsdom.jsdom('<!doctype html><<html><body></body></html>');
 global.window = global.document.defaultView;
-const $ = _$(window);
 
-chaiJquery(chai, chai.util, $);
+// Bootstrap jquery with mocked window object
+const $ = _$(global.window);
 
-function renderComponent(ComponentClass, props = {}, state = {}) {
-  const componentInstance =  TestUtils.renderIntoDocument(
-    <Provider store={createStore(reducers, state)}>
+// build renderComponent helper that will render given react class
+function renderComponent(ComponentClass, props, state) {
+  // Renders class into mocked DOM
+  const componentInstance = TestUtils.renderIntoDocument(
+    <Provider store={ createStore(reducer, state) }>
       <ComponentClass {...props} />
     </Provider>
   );
 
+  // Returns DOM element and wraps it in jquery goodness
   return $(ReactDOM.findDOMNode(componentInstance));
 }
 
-$.fn.simulate = function(eventName, value) {
-  if (value) {
+// build helper for simulating events
+$.fn.simulate = function(eventName, value){
+  
+  if(value){
     this.val(value);
   }
+
   TestUtils.Simulate[eventName](this[0]);
 };
 
-export {renderComponent, expect};
+// set up chai-jquery
+chaiJquery(chai, chai.util, $);
+
+export {renderComponent, expect}
